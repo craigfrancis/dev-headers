@@ -1,0 +1,26 @@
+{
+	"name": "Dev Headers",
+	"short_name": "Dev Headers",
+	"version": "1.0",
+	"manifest_version": 2,
+	"description": "Adds a header for dev websites.",
+	"icons": {
+			"16":  "icons/000000/16.png",
+			"48":  "icons/000000/48.png",
+			"128": "icons/000000/128.png"
+		},
+	"browser_action": {
+		"default_icon": {
+			"16": "icons/BBBBBB/16.png",
+			"24": "icons/BBBBBB/24.png",
+			"32": "icons/BBBBBB/32.png"
+		},
+		"default_title": "Dev Headers",
+		"default_popup": "popup.html"
+	},
+	"background": {
+			"scripts": ["background.js"]
+		},
+	"permissions": [ "tabs", "storage", "webRequest", "webRequestBlocking", "<all_urls>" ],
+	"content_security_policy": "default-src 'none'; base-uri 'none'; form-action 'none'; style-src 'self'; script-src 'self'; connect-src *; block-all-mixed-content"
+}

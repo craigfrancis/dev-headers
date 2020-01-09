@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+	<meta charset="UTF-8" />
+	<script src="/popup.js" async="async"></script>
+	<link rel="stylesheet" type="text/css" href="/popup.css" media="all" />
+	<title>Dev Headers</title>
+</head>
+<body>
+
+	<h1>Dev Headers</h1>
+
+	<div id="output"></div>
+
+	<div id="disabled">
+		<p><input id="button_enable" type="button" value="Enable" /></p>
+	</div>
+
+	<div id="enabled">
+
+		<ul class="views">
+			<li><a href="#view_details">Details</a></li>
+			<li><a href="#view_setup">Setup</a></li>
+		</ul>
+
+		<div class="view" id="view_details">
+
+			<section id="overview">
+				<h2>Overview</h2>
+				<div id="overview_warnings"></div>
+				<div id="overview_table">
+					<table>
+						<thead>
+							<tr>
+								<th scope="col" class="response" colspan="2">Response</th>
+								<th scope="col" class="headers" data-replace="true">Headers</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr>
+								<td colspan="3" class="no_results"><span>No Requests Found</span></td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+			</section>
+
+			<section id="csp">
+				<h2><abbr title="Content Security Policy">CSP</abbr></h2>
+				<div id="csp_warnings"></div>
+				<div id="csp_table">
+					<table>
+						<thead>
+							<tr>
+								<th scope="col">Directive</th>
+								<th scope="col">Value</th>
+								<th scope="col">&#xA0;</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr>
+								<td colspan="3" class="no_results">Unknown</td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+			</section>
+
+			<section id="fp">
+				<h2>Feature Policy</h2>
+				<div id="fp_warnings"></div>
+				<div id="fp_table">
+					<table>
+						<thead>
+							<tr>
+								<th scope="col">Directive</th>
+								<th scope="col">Value</th>
+								<th scope="col">&#xA0;</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr>
+								<td colspan="3" class="no_results">Unknown</td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+			</section>
+
+		</div>
+
+		<div class="view" id="view_setup">
+
+			<section id="setup">
+
+				<h2>Setup</h2>
+
+				<p>
+					<label for="key_value">X-Dev-Key Header:</label>
+					<input type="text" id="key_value" />
+					<input id="button_save" type="button" value="Save" />
+				</p>
+
+				<p>
+					<input id="button_disable" type="button" value="Disable" />
+					<input id="button_remove" type="button" value="Remove" />
+				</p>
+
+			</section>
+
+			<section id="other_origins">
+
+				<h2>Other Origins:</h2>
+
+				<ul id="other_origin_list">
+					<li>No other origins found</li>
+				</ul>
+
+			</section>
+
+		</div>
+
+	</div>
+
+</body>
+</html>

@@ -1,0 +1,326 @@
+/*--------------------------------------------------*/
+/* General setup                                    */
+
+	html, body, div, span, applet, object, iframe,
+	h1, h2, h3, h4, h5, h6, p, blockquote, pre,
+	a, abbr, acronym, address, big, cite, code,
+	del, dfn, em, font, img, ins, kbd, q, s, samp,
+	small, strike, strong, sub, sup, tt, var,
+	dl, dt, dd, ol, ul, li,
+	fieldset, form, label, legend,
+	table, caption, tbody, tfoot, thead, tr, th, td {
+		margin: 0;
+		padding: 0;
+		border: 0;
+		font-size: 100%;
+		vertical-align: baseline;
+		background: transparent;
+	}
+
+	article, aside, figcaption, figure, footer,
+	header, hgroup, main, nav, section {
+		display: block;
+	}
+
+	html {
+		-webkit-text-size-adjust: 100%; /* Prevent font scaling in landscape while allowing user zoom */
+		font: -apple-system-body; /* Allow iOS system "larger text" to effect website */
+		font-family: verdana, arial, helvetica, sans-serif;
+		font-size: 0.8em;
+	}
+
+	html, body {
+		color: #000;
+		background: #D6D6D6;
+	}
+
+	abbr {
+		border: 0;
+		text-decoration: none; /* Firefox no longer uses border */
+	}
+
+	p,
+	h1,
+	h2,
+	h3 {
+		margin: 0 0 1em 0;
+	}
+
+	p,
+	li {
+		line-height: 1.5em;
+	}
+
+	ul,
+	ol {
+		margin: 0 0 1em 2em;
+	}
+
+	h2 {
+		margin: 1rem 0;
+		font-size: 1.2em;
+	}
+
+	table {
+		border-collapse: collapse;
+		white-space: nowrap;
+	}
+
+	table th,
+	table td {
+		border: 1px solid #D8D8D8;
+		padding: 1px 2px;
+	}
+
+	table th {
+		background: #EBEBEB;
+	}
+
+	table tr:nth-child(even) {
+		background-color: #FAFAFA;
+	}
+
+	table tr:hover {
+		background-color: #FFD;
+	}
+
+/*--------------------------------------------------*/
+/* Main elements                                    */
+
+	#enabled {
+		width: 55em;
+	}
+
+	#output p,
+	#disabled p {
+		padding: 1em;
+		margin: 0;
+	}
+
+	h1,
+	#enabled > div.view section:first-child > h2:first-child {
+		position: absolute;
+		left: -5000px;
+	}
+
+/*--------------------------------------------------*/
+/* Toggle view state                                */
+
+	#disabled,
+	#enabled,
+	#enabled > div.view {
+		display: none;
+	}
+
+	html.disabled #disabled,
+	html.enabled #enabled,
+	html.enabled[data-view="view_details"] #enabled #view_details,
+	html.enabled[data-view="view_setup"] #enabled #view_setup {
+		display: block;
+	}
+
+/*--------------------------------------------------*/
+/* Toggle view tabs                                 */
+
+	#enabled > ul.views {
+		list-style: none;
+		display: flex;
+		margin: 0;
+	}
+
+	#enabled > ul.views li {
+		flex: 1;
+	}
+
+	#enabled > ul.views li a {
+		border-top: 1px solid #D6D6D6; /* So text position does not jump down when selected */
+		border-bottom: 1px solid #000;
+		display: block;
+		padding: 0.5em;
+		text-align: center;
+		color: #000;
+		text-decoration: none;
+		font-weight: bold;
+		font-size: 1.1em;
+	}
+
+	html.enabled[data-view="view_details"] #enabled > ul.views a[href="#view_details"],
+	html.enabled[data-view="view_setup"] #enabled > ul.views a[href="#view_setup"] {
+		border-top-left-radius: 2px;
+		border-top-right-radius: 2px;
+		border: 1px solid #000;
+		border-bottom-color: #FFF;
+		background: #FFF;
+	}
+
+	#enabled > div.view {
+		border: 1px solid #000;
+		border-top: 0;
+		padding: 1.5em 1em 0 1em; /* FireFox does not apply padding-bottom to wrapper */
+		margin: 0 0 1px 0;
+		background: #FFF;
+		height: 40em;
+		overflow: auto;
+		cursor: default; /* Don't show text selection, it's still allowed though */
+	}
+
+/*--------------------------------------------------*/
+/* Tables                                           */
+
+	#enabled table td.no_results,
+	#enabled table td.missing {
+		text-align: center;
+		padding: 0.5em 0;
+	}
+
+	#overview_table th.response {
+		min-width: 25em; /* See .tooltip */
+	}
+
+	#overview_table th[data-abbr] {
+		font-size: 0.75em;
+		width: 3.1em;
+	}
+
+	#overview_table td.header {
+		text-align: center;
+	}
+
+	#overview_table td.no_results span {
+		display: block;
+		margin-bottom: 0.5em;
+	}
+
+	#overview_table tr td.path {
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		max-width: 29em;
+	}
+
+	#overview_table tr td.path a {
+		text-decoration: none;
+		color: inherit;
+	}
+
+	#overview_warnings ul,
+	#csp_warnings ul,
+	#fp_warnings ul {
+		margin: 1rem 0;
+		list-style: none;
+	}
+
+	#overview_warnings ul {
+		margin-top: 0;
+	}
+
+	#overview_warnings ul li,
+	#csp_warnings ul li,
+	#fp_warnings ul li {
+		padding: 0 1rem;
+		position: relative;
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
+
+	#overview_warnings ul li:before,
+	#csp_warnings ul li:before,
+	#fp_warnings ul li:before {
+		content: '\2022';
+		position: absolute;
+		left: 0.3em;
+	}
+
+	#overview_table tr[data-cached="true"] td {
+		color: #AAA;
+	}
+
+	#overview_table tr[data-cached="true"] td.focus {
+		color: inherit;
+	}
+
+	#fp_table {
+		padding-bottom: 1em; /* FireFox does not apply padding-bottom to wrapper */
+	}
+
+	#overview_table tr td[data-good],
+	#csp_table td.value_none,
+	#fp_table td.value_none {
+		color: #000CEB;
+		font-weight: bold;
+	}
+
+	#overview_table tr td[data-warning-count]:not([data-warning-count="0"]),
+	#overview_table tr td.recommended_missing,
+	#overview_warnings ul,
+	#csp_warnings ul,
+	#fp_warnings ul,
+	#csp_table span.warning,
+	#fp_table span.warning,
+	#csp_table td.missing,
+	#fp_table tbody[data-type="main_frame"] td.missing,
+	#csp_table td.value_unsafe-inline {
+		color: #EB0000;
+	}
+
+	#csp_table td.ignored {
+		text-decoration: line-through;
+	}
+
+	#overview_table tr[data-type="main_frame"] td.recommended_missing,
+	#csp_table td.missing,
+	#fp_table tbody[data-type="main_frame"] td.missing {
+		font-weight: bold; /* Only bold the ones which count towards the badge count */
+	}
+
+/*--------------------------------------------------*/
+/* Setup                                            */
+
+	#key_value {
+		width: 25em;
+	}
+
+	#other_origins h2 {
+		margin: 3em 0 0.5em 0;
+	}
+
+	#other_origin_list li.current {
+		font-weight: bold;
+	}
+
+	#other_origin_list li[data-enabled="false"] a {
+		text-decoration: line-through;
+	}
+
+/*--------------------------------------------------*/
+/* Tooltip                                          */
+
+	.tooltip {
+		position: absolute;
+		background: #EEEEEE;
+		border: 2px solid #BBBBBB;
+		border-radius: 4px;
+		padding: 0.5em;
+		max-width: 23em; /* See th.response */
+	}
+
+	.tooltip.inc_matches {
+		max-width: 30em;
+	}
+
+	.tooltip h2 {
+		font-size: 1em;
+		margin: 0;
+	}
+
+	.tooltip p {
+		margin: 0.5em 0 0 0;
+		max-height: 4.5em;
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
+
+	.tooltip p.match {
+		white-space: nowrap;
+	}
