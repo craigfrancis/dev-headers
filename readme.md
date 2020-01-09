@@ -5,6 +5,12 @@ A simple browser extension that helps website developers check request/response 
 
 ## Screenshots
 
-![Good Example](https://raw.githubusercontent.com/craigfrancis/dev-headers/master/resources/screenshot-good.jpg)
+![Good Content-Security-Policy](https://raw.githubusercontent.com/craigfrancis/dev-headers/master/resources/screenshot-csp-good.jpg)
 
-![Bad Example](https://raw.githubusercontent.com/craigfrancis/dev-headers/master/resources/screenshot-bad.jpg)
+![Bad Content-Security-Policy](https://raw.githubusercontent.com/craigfrancis/dev-headers/master/resources/screenshot-csp-bad.jpg)
+
+![Good Resources](https://raw.githubusercontent.com/craigfrancis/dev-headers/master/resources/screenshot-resources-good.jpg)
+
+![Bad Resources](https://raw.githubusercontent.com/craigfrancis/dev-headers/master/resources/screenshot-resources-bad.jpg)
+
+![Bad Feature-Policy](https://raw.githubusercontent.com/craigfrancis/dev-headers/master/resources/screenshot-fp-bad.jpg)
