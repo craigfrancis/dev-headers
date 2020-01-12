@@ -578,6 +578,7 @@ var dev_headers = {};
 
 				var option,
 					notes,
+					used,
 					ignored,
 					ignore_unsafe_inline,
 					allow_data = ['img-src', 'font-src'],
@@ -602,6 +603,7 @@ var dev_headers = {};
 						option = csp_parsed[directive_name][k];
 						notes = [];
 						ignored = false;
+						used = null;
 
 						if (directive_name == 'require-sri-for') {
 
@@ -698,9 +700,11 @@ var dev_headers = {};
 
 								csp_warning_count++;
 
+								used = false;
+
 							}
 
-							if (option['value_keyword'] == 'self' && !allow_self.includes(directive_name)) {
+							if (option['value_keyword'] == 'self' && !allow_self.includes(directive_name) && used !== false) {
 
 									//--------------------------------------------------
 									// As in, put all CSS in one folder, JS in another, etc.
