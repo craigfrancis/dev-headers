@@ -1,14 +1,15 @@
 
 var dev_headers = {};
 
-;(function(browser) {
+;(function(undefined) {
 
 	//--------------------------------------------------
 	// Config
 
 		'use strict';
 
-		var dev_config = {},
+		var browser = (window.chrome || window.browser),
+			dev_config = {},
 			popup_tab_id = null,
 			popup_origin = null,
 			tab_responses = {},
@@ -1440,4 +1441,4 @@ var dev_headers = {};
 
 		}
 
-})((typeof browser !== 'undefined' ? browser : chrome));
+})();

@@ -1,12 +1,13 @@
 
-;(function(browser, document, window, undefined) {
+;(function(document, window, undefined) {
 
 	//--------------------------------------------------
 	// Config
 
 		'use strict';
 
-		var info = {};
+		var browser = (window.chrome || window.browser),
+			info = {};
 
 	//--------------------------------------------------
 	// Resources
@@ -134,4 +135,4 @@
 
 		browser.runtime.sendMessage({'target': 'background', 'action': 'content', 'info': info});
 
-})((typeof browser !== 'undefined' ? browser : chrome), document, window);
+})(document, window);

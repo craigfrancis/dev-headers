@@ -1,9 +1,10 @@
 
-;(function(browser, document, window, undefined) {
+;(function(document, window, undefined) {
 
 	'use strict';
 
-	var header_details,
+	var browser = (window.chrome || window.browser),
+		header_details,
 		output_ref,
 		tooltip_ref,
 		tooltip_rect,
@@ -856,4 +857,4 @@
 			}
 		});
 
-})((typeof browser !== 'undefined' ? browser : chrome), document, window);
+})(document, window);
