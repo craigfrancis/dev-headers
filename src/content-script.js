@@ -6,8 +6,7 @@
 
 		'use strict';
 
-		var browser = (window.chrome || window.browser),
-			info = {};
+		var info = {};
 
 	//--------------------------------------------------
 	// Resources
@@ -133,6 +132,12 @@
 	//--------------------------------------------------
 	// Return
 
-		browser.runtime.sendMessage({'target': 'background', 'action': 'content', 'info': info});
+		var message = {'target': 'background', 'action': 'content', 'info': info};
+
+		if (window.chrome) {
+			window.chrome.runtime.sendMessage(message);
+		} else {
+			browser.runtime.sendMessage(message); // Not part of "window.browser" in Firefox 73
+		}
 
 })(document, window);
