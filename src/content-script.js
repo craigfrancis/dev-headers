@@ -69,7 +69,10 @@
 	//--------------------------------------------------
 	// Trusted types
 
-		info['trusted_types'] = (window.trustedTypes ? window.trustedTypes.getPolicyNames() : null);
+		info['trusted_types'] = null;
+
+			// (window.trustedTypes ? window.trustedTypes.getPolicyNames() : null);
+			// https://github.com/w3c/webappsec-trusted-types/issues/235
 
 	//--------------------------------------------------
 	// Sources

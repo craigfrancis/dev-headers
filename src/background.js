@@ -624,25 +624,27 @@ var dev_headers = {};
 
 						} else if (directive_name == 'trusted-types') {
 
-							if (current_content && current_content['trusted_types'] && current_content['trusted_types'].includes(option['value'])) {
+							// https://github.com/w3c/webappsec-trusted-types/issues/235
 
-								notes.push({
-										'type': 'matches',
-										'matches': [{
-												'url': 'N/A',
-											}],
-									});
-
-							} else if (option['value_keyword'] != 'none') {
-
-								notes.push({
-										'type': 'warning',
-										'text': 'Not used',
-									});
-
-								csp_warning_count++;
-
-							}
+							// if (current_content && current_content['trusted_types'] && current_content['trusted_types'].includes(option['value'])) {
+							//
+							// 	notes.push({
+							// 			'type': 'matches',
+							// 			'matches': [{
+							// 					'url': 'N/A',
+							// 				}],
+							// 		});
+							//
+							// } else if (option['value_keyword'] != 'none') {
+							//
+							// 	notes.push({
+							// 			'type': 'warning',
+							// 			'text': 'Not used',
+							// 		});
+							//
+							// 	csp_warning_count++;
+							//
+							// }
 
 						} else if (current_content) { // Looking at the main request.
 
