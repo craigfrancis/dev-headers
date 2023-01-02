@@ -205,7 +205,7 @@
 
 	#overview_warnings ul,
 	#csp_warnings ul,
-	#fp_warnings ul {
+	#pp_warnings ul {
 		margin: 1rem 0;
 		list-style: none;
 	}
@@ -216,7 +216,7 @@
 
 	#overview_warnings ul li,
 	#csp_warnings ul li,
-	#fp_warnings ul li {
+	#pp_warnings ul li {
 		padding: 0 1rem;
 		position: relative;
 		white-space: nowrap;
@@ -226,7 +226,7 @@
 
 	#overview_warnings ul li:before,
 	#csp_warnings ul li:before,
-	#fp_warnings ul li:before {
+	#pp_warnings ul li:before {
 		content: '\2022';
 		position: absolute;
 		left: 0.3em;
@@ -240,13 +240,13 @@
 		color: inherit;
 	}
 
-	#fp_table {
+	#pp_table {
 		padding-bottom: 1em; /* FireFox does not apply padding-bottom to wrapper */
 	}
 
 	#overview_table tr td[data-good],
 	#csp_table td.value_none,
-	#fp_table td.value_none {
+	#pp_table td.value_none {
 		color: #000CEB;
 		font-weight: bold;
 	}
@@ -255,11 +255,11 @@
 	#overview_table tr td.recommended_missing,
 	#overview_warnings ul,
 	#csp_warnings ul,
-	#fp_warnings ul,
+	#pp_warnings ul,
 	#csp_table span.warning,
-	#fp_table span.warning,
+	#pp_table span.warning,
 	#csp_table td.missing,
-	#fp_table tbody[data-type="main_frame"] td.missing,
+	#pp_table tbody[data-type="main_frame"] td.missing,
 	#csp_table td.value_unsafe-inline {
 		color: #EB0000;
 	}
@@ -270,7 +270,7 @@
 
 	#overview_table tr[data-type="main_frame"] td.recommended_missing,
 	#csp_table td.missing,
-	#fp_table tbody[data-type="main_frame"] td.missing {
+	#pp_table tbody[data-type="main_frame"] td.missing {
 		font-weight: bold; /* Only bold the ones which count towards the badge count */
 	}
 

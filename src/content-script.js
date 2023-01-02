@@ -62,9 +62,9 @@
 		info['manifest_url'] = manifest;
 
 	//--------------------------------------------------
-	// Feature policies
+	// Permissions policy
 
-		info['feature_policies'] = (document.featurePolicy ? document.featurePolicy.features() : null);
+		info['permissions_policies'] = (document.featurePolicy ? document.featurePolicy.features() : null);
 
 	//--------------------------------------------------
 	// Trusted types

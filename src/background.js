@@ -19,7 +19,7 @@ var dev_headers = {};
 			icon_text_timeout = null,
 			header_details = [
 					{'abbr': 'CSP',  'name': 'Content-Security-Policy',      'recommended': 'all'},
-					{'abbr': 'FP',   'name': 'Feature-Policy',               'recommended': 'main'},
+					{'abbr': 'PP',   'name': 'Permissions-Policy',           'recommended': 'main'},
 					{'abbr': 'RP',   'name': 'Referrer-Policy',              'recommended': 'all'},
 					{'abbr': 'CORP', 'name': 'Cross-Origin-Resource-Policy', 'recommended': 'all'},
 					{'abbr': 'COOP', 'name': 'Cross-Origin-Opener-Policy',   'recommended': 'all'},
@@ -767,30 +767,30 @@ var dev_headers = {};
 		}
 
 	//--------------------------------------------------
-	// FP Parsing
+	// PP Parsing
 
-		dev_headers.fp_parse = function(fp_content, current_origin, current_content, current_responses, current_extra_responses) {
+		dev_headers.pp_parse = function(pp_content, current_origin, current_content, current_responses, current_extra_responses) {
 
 			//--------------------------------------------------
 			// Initial
 
-				var fp_parsed = dev_headers.policy_parse(fp_content, current_origin),
-					fp_warning_count = 0,
-					fp_warning_overview = [];
+				var pp_parsed = dev_headers.policy_parse(pp_content, current_origin),
+					pp_warning_count = 0,
+					pp_warning_overview = [];
 
 			//--------------------------------------------------
 			// Add missing
 
 				var policy_name;
 
-				if (current_content && current_content['feature_policies']) {
-					for (var k = (current_content['feature_policies'].length - 1); k >= 0; k--) {
+				if (current_content && current_content['permissions_policies']) {
+					for (var k = (current_content['permissions_policies'].length - 1); k >= 0; k--) {
 
-						policy_name = current_content['feature_policies'][k];
+						policy_name = current_content['permissions_policies'][k];
 
-						if (!fp_parsed[policy_name]) {
+						if (!pp_parsed[policy_name]) {
 
-							fp_parsed[policy_name] = [{
+							pp_parsed[policy_name] = [{
 									'value': '',
 									'value_short': '',
 									'value_url': null,
@@ -802,7 +802,7 @@ var dev_headers = {};
 										}],
 								}];
 
-							fp_warning_count++;
+							pp_warning_count++;
 
 						}
 
@@ -813,9 +813,9 @@ var dev_headers = {};
 			// Return
 
 				return {
-						'parsed': fp_parsed,
-						'warning_count': (fp_warning_overview.length + fp_warning_count),
-						'warning_overview': fp_warning_overview,
+						'parsed': pp_parsed,
+						'warning_count': (pp_warning_overview.length + pp_warning_count),
+						'warning_overview': pp_warning_overview,
 					};
 
 		}
@@ -1085,7 +1085,7 @@ var dev_headers = {};
 												'type': content_types[content_type],
 												'headers': {},
 												'responseCSP': null,
-												'responseFP': null,
+												'responsePP': null,
 											};
 
 										for (var k = (header_details.length - 1); k >= 0; k--) {
@@ -1101,8 +1101,8 @@ var dev_headers = {};
 													details['responseCSP'] = dev_headers.csp_parse(header_value, popup_origin);
 												}
 
-												if (header_name == 'feature-policy') {
-													details['responseFP'] = dev_headers.fp_parse(header_value, popup_origin);
+												if (header_name == 'permissions-policy') {
+													details['responsePP'] = dev_headers.pp_parse(header_value, popup_origin);
 												}
 
 											}
@@ -1126,7 +1126,7 @@ var dev_headers = {};
 				Promise.all(extra_promises).then(function() {
 
 					//--------------------------------------------------
-					// CSP and FP parsing (now we know the main response)
+					// CSP and PP parsing (now we know the main response)
 
 							var response, header_value;
 
@@ -1134,7 +1134,7 @@ var dev_headers = {};
 
 								response = responses[id];
 								responses[id]['responseCSP'] = null;
-								responses[id]['responseFP'] = null;
+								responses[id]['responsePP'] = null;
 
 								if (response['responseHeadersClean']['content-security-policy']) {
 
@@ -1148,14 +1148,14 @@ var dev_headers = {};
 
 								}
 
-								if (response['responseHeadersClean']['feature-policy']) {
+								if (response['responseHeadersClean']['permissions-policy']) {
 
-									header_value = response['responseHeadersClean']['feature-policy'];
+									header_value = response['responseHeadersClean']['permissions-policy'];
 
 									if (id == response_main) {
-										responses[id]['responseFP'] = dev_headers.fp_parse(header_value, popup_origin, current_content, responses, extra_responses);
+										responses[id]['responsePP'] = dev_headers.pp_parse(header_value, popup_origin, current_content, responses, extra_responses);
 									} else {
-										responses[id]['responseFP'] = dev_headers.fp_parse(header_value, popup_origin);
+										responses[id]['responsePP'] = dev_headers.pp_parse(header_value, popup_origin);
 									}
 
 								}

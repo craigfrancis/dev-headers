@@ -19,8 +19,8 @@
 		overview_table,
 		csp_warnings,
 		csp_table,
-		fp_warnings,
-		fp_table,
+		pp_warnings,
+		pp_table,
 		key_input;
 
 	function background_send_message(action, data) {
@@ -357,7 +357,7 @@
 			focused.querySelector('td.focus').textContent = '▶';
 
 		//--------------------------------------------------
-		// Update CSP and FP tables
+		// Update CSP and PP tables
 
 			var response;
 
@@ -370,10 +370,10 @@
 			if (response) {
 
 				update_policy_output(csp_warnings, csp_table, response['responseCSP']);
-				update_policy_output(fp_warnings,  fp_table,  response['responseFP']);
+				update_policy_output(pp_warnings,  pp_table,  response['responsePP']);
 
 				if (csp_table) csp_table.setAttribute('data-type', response['type']);
-				if (fp_table)  fp_table.setAttribute('data-type', response['type']);
+				if (pp_table)  pp_table.setAttribute('data-type', response['type']);
 
 			}
 
@@ -508,7 +508,7 @@
 					} else if (header_names.indexOf(header['name_lower']) != -1) {
 
 						if (header['name_lower'] == 'content-security-policy' && response['responseCSP']) td_warning_count += response['responseCSP']['warning_count'];
-						if (header['name_lower'] == 'feature-policy'          && response['responseFP'])  td_warning_count += response['responseFP']['warning_count'];
+						if (header['name_lower'] == 'permissions-policy'      && response['responsePP'])  td_warning_count += response['responsePP']['warning_count'];
 
 						if (td_warning_count > 0) {
 							td.textContent = '!';
@@ -696,7 +696,7 @@
 
 					update_table_overview();
 
-					update_table_focus(null); // Focus main or first item, to show CSP and FP
+					update_table_focus(null); // Focus main or first item, to show CSP and PP
 
 				}
 
@@ -835,8 +835,8 @@
 			csp_warnings = document.getElementById('csp_warnings');
 			csp_table = document.querySelector('#csp_table tbody');
 
-			fp_warnings = document.getElementById('fp_warnings');
-			fp_table = document.querySelector('#fp_table tbody');
+			pp_warnings = document.getElementById('pp_warnings');
+			pp_table = document.querySelector('#pp_table tbody');
 
 		//--------------------------------------------------
 		// Get the background script to get the data.
