@@ -961,6 +961,16 @@ var dev_headers = {};
 
 			if (typeof icon_text === 'undefined') {
 
+					// Only show the annoying icon number if a header is
+					// missing entirely, for the main_frame.
+					//
+					// No need to wait for the headers to be parsed, or
+					// show minor issues (e.g. unused links in navigate-to).
+					//
+					// Also, we are not notified about resource in
+					// the "in-memory cache", hence the later `fetch()`,
+					// making the count unreliable.
+
 				icon_count = 0;
 
 				if (tab_responses[tab_id]) {
@@ -971,7 +981,7 @@ var dev_headers = {};
 						headers = tab_responses[tab_id][response_main]['responseHeadersClean'];
 						for (var k = (header_details.length - 1); k >= 0; k--) {
 							if (!headers[header_details[k]['name_lower']]) {
-								icon_count++; // Can only really check main response, as we are not notified about resource in the "in-memory cache".
+								icon_count++;
 							}
 						}
 					}
@@ -1262,17 +1272,18 @@ var dev_headers = {};
 
 		function request_event_log(details, headers) {
 
+				// This function is not called when files come from
+				// the "very fast in-memory cache".
+				//
+				// And it's too slow if the following is called in
+				// onBeforeSendHeaders for the 'main_frame'...
+				//     browser.webRequest.handlerBehaviorChanged();
+
 			var tab_id = details.tabId;
 
 			if (tab_id == -1) { // Set to -1 if the request isn't related to a tab - e.g. opening extension popup window, and the `fetch()` call re-requests the resources to get the missing headers.
 				return;
 			}
-
-				// This function is not called when files come from
-				// the "very fast in-memory cache", and it's too slow
-				// if the following is called in onBeforeSendHeaders
-				// for the 'main_frame'...
-				//     browser.webRequest.handlerBehaviorChanged();
 
 			if (headers && details.type == 'main_frame') { // New page load - clear the list of old responses, and enable the icon.
 
