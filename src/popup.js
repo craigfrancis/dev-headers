@@ -531,7 +531,7 @@
 						if (header['name_lower'] == 'permissions-policy'      && response['responsePP'])  td_warning_count += response['responsePP']['warning_count'];
 
 						if (td_warning_count > 0) {
-							td.textContent = '!';
+							td.textContent = '?';
 						} else {
 							td.textContent = 'Y';
 							td_good = true;
