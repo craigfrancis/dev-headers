@@ -264,6 +264,7 @@
 						for (var k = 0, l1 = (options.length); (k < l1 || k == 0); k++) {
 
 							tr = document.createElement('tr');
+							tr.setAttribute('data-name', directive_name);
 
 							td = document.createElement('td');
 							td.textContent = (k == 0 ? directive_name : '');
@@ -285,6 +286,9 @@
 									td.setAttribute('class', 'ignored');
 								} else if (options[k]['value_keyword']) {
 									td.setAttribute('class', 'value_' + options[k]['value_keyword']);
+								} else if (options[k]['value_blocked']) {
+									td.setAttribute('class', 'value_blocked');
+									td.textContent = 'blocked';
 								}
 								tr.appendChild(td);
 

@@ -226,11 +226,11 @@ var dev_headers = {};
 			// 	};
 			//
 			// for (var csp_url in matching_tests) {
-			// 	var csp_parsed = dev_headers.url_parse(csp_url);
+			// 	var policy_parsed = dev_headers.url_parse(csp_url);
 			// 	for (var resource_url in matching_tests[csp_url]) {
 			// 		console.log('"' + csp_url + '" vs "' + resource_url + '"');
 			// 		var match_should = matching_tests[csp_url][resource_url];
-			// 		var match_found = dev_headers.url_match(csp_parsed, dev_headers.url_parse(resource_url));
+			// 		var match_found = dev_headers.url_match(policy_parsed, dev_headers.url_parse(resource_url));
 			// 		if (match_found === false) {
 			// 			if (match_should !== false) {
 			// 				console.log('### Should match'); return;
@@ -247,131 +247,120 @@ var dev_headers = {};
 			// }
 
 	//--------------------------------------------------
-	// Policy Parsing
+	// CSP Parsing
 
-		dev_headers.policy_parse = function(policy_content, current_origin) {
+		dev_headers.csp_parse = function(policy_content, current_origin, current_content, current_responses, current_extra_responses) {
 
-			var policy_directives,
-				policy_parsed = {},
-				directive_start,
-				directive_name,
-				directive_value,
-				directive_options,
-				value_clean,
-				value_short,
-				value_parsed,
-				value_keyword,
-				value_nonce,
-				value_hash;
+			//--------------------------------------------------
+			// Parsing
 
-			if (policy_content) {
-				policy_directives = policy_content.split(';');
-			} else {
-				policy_directives = [];
-			}
+				var policy_directives = [],
+					policy_parsed = {},
+					directive_start,
+					directive_name,
+					directive_value,
+					directive_options,
+					value_clean,
+					value_short,
+					value_parsed,
+					value_keyword,
+					value_nonce,
+					value_hash;
 
-			for (var k = 0, l1 = (policy_directives.length); k < l1; k++) {
-
-				directive_value = policy_directives[k].trim();
-				directive_start = directive_value.indexOf(' ');
-
-				if (directive_start >= 0) {
-					directive_name = directive_value.substring(0, directive_start);
-					directive_options = directive_value.substring(directive_start).trim().split(' ');
-				} else {
-					directive_name = directive_value;
-					directive_options = [];
+				if (policy_content) {
+					policy_directives = policy_content.split(';');
 				}
 
-				directive_name = directive_name.trim().toLowerCase();
+				for (var k = 0, l1 = (policy_directives.length); k < l1; k++) {
 
-				if (directive_name) {
+					directive_value = policy_directives[k].trim();
+					directive_start = directive_value.indexOf(' ');
 
-					policy_parsed[directive_name] = [];
+					if (directive_start >= 0) {
+						directive_name = directive_value.substring(0, directive_start);
+						directive_options = directive_value.substring(directive_start).trim().split(' ');
+					} else {
+						directive_name = directive_value;
+						directive_options = [];
+					}
 
-					for (var j = 0, l2 = (directive_options.length); j < l2; j++) {
+					directive_name = directive_name.trim().toLowerCase();
 
-						value_clean = directive_options[j].trim();
+					if (directive_name) {
 
-						value_short = value_clean;
-						if (current_origin && value_short.substring(0, current_origin.length) == current_origin) {
-							value_short = value_short.substring(current_origin.length);
-						}
+						policy_parsed[directive_name] = [];
 
-						value_parsed = value_clean.match(/'((nonce-|sha256-|sha384-|sha512-)?(.*))'/);
-						value_keyword = null;
-						value_nonce = null;
-						value_hash = null;
-						if (value_parsed) {
-							value_keyword = value_parsed[1];
-							if (value_parsed[2] == 'nonce') {
-								value_nonce = value_parsed[3];
-							} else if (value_parsed[2]) {
-								value_hash = value_parsed[3];
+						for (var j = 0, l2 = (directive_options.length); j < l2; j++) {
+
+							value_clean = directive_options[j].trim();
+
+							value_short = value_clean;
+							if (current_origin && value_short.substring(0, current_origin.length) == current_origin) {
+								value_short = value_short.substring(current_origin.length);
 							}
-						}
 
-						policy_parsed[directive_name].push({
-								'value': value_clean,
-								'value_short': value_short,
-								'value_url': dev_headers.url_parse(value_clean),
-								'value_keyword': value_keyword,
-								'value_nonce': value_nonce,
-								'value_hash': value_hash,
-								'matches': [],
-								'notes': [],
-							});
+							value_parsed = value_clean.match(/'((nonce-|sha256-|sha384-|sha512-)?(.*))'/);
+							value_keyword = null;
+							value_nonce = null;
+							value_hash = null;
+							if (value_parsed) {
+								value_keyword = value_parsed[1];
+								if (value_parsed[2] == 'nonce') {
+									value_nonce = value_parsed[3];
+								} else if (value_parsed[2]) {
+									value_hash = value_parsed[3];
+								}
+							}
+
+							policy_parsed[directive_name].push({
+									'value': value_clean,
+									'value_short': value_short,
+									'value_url': dev_headers.url_parse(value_clean),
+									'value_keyword': value_keyword,
+									'value_nonce': value_nonce,
+									'value_hash': value_hash,
+									'value_blocked': null,
+									'matches': [],
+									'notes': [],
+								});
+
+						}
 
 					}
 
 				}
 
-			}
-
-			return policy_parsed;
-
-		}
-
-	//--------------------------------------------------
-	// CSP Parsing
-
-		dev_headers.csp_parse = function(csp_content, current_origin, current_content, current_responses, current_extra_responses) {
-
-			//--------------------------------------------------
-			// Initial
-
-				var csp_parsed = dev_headers.policy_parse(csp_content, current_origin),
-					csp_warning_count = 0,
-					csp_warning_overview = [];
-
 			//--------------------------------------------------
 			// Overview warnings
 
-				if (!csp_parsed['default-src']) {
+				var csp_warning_count = 0,
+					csp_warning_overview = [];
+
+				if (!policy_parsed['default-src']) {
 
 					csp_warning_overview.push('No \'default-src\' specified.');
 
-				} else if (csp_parsed['default-src'].length != 1 || csp_parsed['default-src'][0]['value'] != '\'none\'') {
+				} else if (policy_parsed['default-src'].length != 1 || policy_parsed['default-src'][0]['value'] != '\'none\'') {
 
 					csp_warning_overview.push('The \'default-src\' should be set to \'none\'.');
 
 				}
 
-				if (!csp_parsed['base-uri']) {
+				if (!policy_parsed['base-uri']) {
 					csp_warning_overview.push('No \'base-uri\' specified.');
 				}
 
-				if (!csp_parsed['frame-ancestors']) {
+				if (!policy_parsed['frame-ancestors']) {
 					csp_warning_overview.push('No \'frame-ancestors\' specified.');
 				}
 
-				if (!csp_parsed['block-all-mixed-content']) {
+				if (!policy_parsed['block-all-mixed-content']) {
 					csp_warning_overview.push('No \'block-all-mixed-content\' specified.');
 				}
 
-				// if (!csp_parsed['require-trusted-types-for']) {
-				// 	csp_warning_overview.push('No \'require-trusted-types-for\' specified.'); // TODO: Enable 'require-trusted-types-for'
-				// }
+				if (!policy_parsed['require-trusted-types-for'] && current_content) { // Only checked on the main request
+					csp_warning_overview.push('No \'require-trusted-types-for\' specified.');
+				}
 
 			//--------------------------------------------------
 			// Extra overview warnings
@@ -382,7 +371,7 @@ var dev_headers = {};
 
 				} else { // ... for the sub responses
 
-					if (!csp_parsed['form-action']) {
+					if (!policy_parsed['form-action']) {
 						csp_warning_overview.push('Sub-responses should specify \'form-action\'.');
 					}
 
@@ -500,11 +489,11 @@ var dev_headers = {};
 						directive = 'manifest-src';
 					}
 
-					if (directive === null || !csp_parsed[directive]) {
+					if (directive === null || !policy_parsed[directive]) {
 						if (directive !== null && directive.substr(-4) == '-src') { // Do not use 'default-src' for directives such as 'navigate-to'
 							directive = 'default-src';
 						}
-						if (!csp_parsed[directive]) {
+						if (!policy_parsed[directive]) {
 							continue;
 						}
 					}
@@ -513,21 +502,21 @@ var dev_headers = {};
 					match_best_length = null;
 					match_self_id = null; // The entry id if 'self' exists.
 
-					for (var j = (csp_parsed[directive].length - 1); j >= 0; j--) {
+					for (var j = (policy_parsed[directive].length - 1); j >= 0; j--) {
 
-						if (csp_parsed[directive][j]['value_keyword'] == 'self') {
+						if (policy_parsed[directive][j]['value_keyword'] == 'self') {
 							match_self_id = j;
 							continue;
 						}
 
-						if (csp_parsed[directive][j]['value'] == '*') {
+						if (policy_parsed[directive][j]['value'] == '*') {
 
 							if (match_best_length === null) {
 								match_best_id = j;
 								match_best_length = 0; // It matches, but anything else would be better (to hopefully show it's not needed).
 							}
 
-						} else if (csp_parsed[directive][j]['value_url']) {
+						} else if (policy_parsed[directive][j]['value_url']) {
 
 							response_url_anon = response_url;
 							response_url_anon.username = '';
@@ -535,12 +524,12 @@ var dev_headers = {};
 							response_url_anon.search = '';
 							response_url_anon.hash = '';
 
-							match_url = dev_headers.url_match(csp_parsed[directive][j]['value_url'], dev_headers.url_parse(response_url_anon.href));
+							match_url = dev_headers.url_match(policy_parsed[directive][j]['value_url'], dev_headers.url_parse(response_url_anon.href));
 
 							if (match_url !== false) {
 								match_score = 0;
 								for (var i = (match_url.length - 1); i >= 0; i--) {
-									match_score += csp_parsed[directive][j]['value_url'][match_url[i]].length;
+									match_score += policy_parsed[directive][j]['value_url'][match_url[i]].length;
 								}
 								if (match_best_length === null || match_score > match_best_length) {
 									match_best_id = j;
@@ -557,7 +546,7 @@ var dev_headers = {};
 					}
 
 					if (match_best_id !== null) {
-						csp_parsed[directive][match_best_id]['matches'].push(response);
+						policy_parsed[directive][match_best_id]['matches'].push(response);
 					} else {
 						missing_sources.push('Missing ' + directive + ': ' + response_url.href);
 					}
@@ -585,12 +574,12 @@ var dev_headers = {};
 					allow_data = ['img-src', 'font-src'],
 					allow_self = ['default-src', 'form-action', 'navigate-to']; // Where 'default-src' has it's own check for being set to 'none'
 
-				for (var directive_name in csp_parsed) {
+				for (var directive_name in policy_parsed) {
 
 					ignore_unsafe_inline = false;
 					if (directive_name == 'script-src' || directive_name == 'style-src') {
-						for (var k = 0, l = (csp_parsed[directive_name].length); k < l; k++) {
-							option = csp_parsed[directive_name][k];
+						for (var k = 0, l = (policy_parsed[directive_name].length); k < l; k++) {
+							option = policy_parsed[directive_name][k];
 							if (option['value_nonce']) {
 								ignore_unsafe_inline = 'nonce';
 							} else if (option['value_hash']) {
@@ -599,9 +588,9 @@ var dev_headers = {};
 						}
 					}
 
-					for (var k = 0, l = (csp_parsed[directive_name].length); k < l; k++) {
+					for (var k = 0, l = (policy_parsed[directive_name].length); k < l; k++) {
 
-						option = csp_parsed[directive_name][k];
+						option = policy_parsed[directive_name][k];
 						notes = [];
 						ignored = false;
 						used = null;
@@ -645,6 +634,19 @@ var dev_headers = {};
 							// 	csp_warning_count++;
 							//
 							// }
+
+						} else if (directive_name == 'require-trusted-types-for') {
+
+							if (option['value'] != '\'script\'') {
+
+								notes.push({
+										'type': 'warning',
+										'text': 'Should be \'script\'',
+									});
+
+								csp_warning_count++;
+
+							}
 
 						} else if (current_content) { // Looking at the main request.
 
@@ -749,8 +751,8 @@ var dev_headers = {};
 
 						}
 
-						csp_parsed[directive_name][k]['ignored'] = ignored;
-						csp_parsed[directive_name][k]['notes'] = notes;
+						policy_parsed[directive_name][k]['ignored'] = ignored;
+						policy_parsed[directive_name][k]['notes'] = notes;
 
 					}
 				}
@@ -759,7 +761,7 @@ var dev_headers = {};
 			// Return
 
 				return {
-						'parsed': csp_parsed,
+						'parsed': policy_parsed,
 						'warning_count': (csp_warning_overview.length + csp_warning_count),
 						'warning_overview': csp_warning_overview,
 					};
@@ -769,28 +771,92 @@ var dev_headers = {};
 	//--------------------------------------------------
 	// PP Parsing
 
-		dev_headers.pp_parse = function(pp_content, current_origin, current_content, current_responses, current_extra_responses) {
+		dev_headers.pp_parse = function(policy_content, current_origin, current_content, current_responses, current_extra_responses) {
 
 			//--------------------------------------------------
-			// Initial
+			// Parsing
 
-				var pp_parsed = dev_headers.policy_parse(pp_content, current_origin),
-					pp_warning_count = 0,
-					pp_warning_overview = [];
+				var policy_directives = [],
+					policy_parsed = {},
+					directive_start,
+					directive_name,
+					directive_value,
+					directive_options_raw,
+					directive_options,
+					value_clean,
+					value_short,
+					value_parsed,
+					value_keyword,
+					value_nonce,
+					value_hash;
+
+				if (policy_content) {
+					policy_directives = policy_content.split(',');
+				}
+
+				for (var k = 0, l1 = (policy_directives.length); k < l1; k++) {
+
+					directive_value = policy_directives[k].trim();
+					directive_start = directive_value.indexOf('=');
+
+					if (directive_start >= 0) {
+						directive_name = directive_value.substring(0, directive_start).trim();
+						directive_options_raw = directive_value.substring(directive_start + 1).trim();
+						directive_options = directive_options_raw.replace(/^\(/, '').replace(/\)$/, '').split(' ');
+					} else {
+						directive_name = directive_value;
+						directive_options_raw = null;
+						directive_options = [];
+					}
+
+					directive_name = directive_name.trim().toLowerCase();
+
+					if (directive_name) {
+
+						policy_parsed[directive_name] = [];
+
+						for (var j = 0, l2 = (directive_options.length); j < l2; j++) {
+
+							value_clean = directive_options[j].trim();
+
+							value_short = value_clean;
+							if (current_origin && value_short.substring(0, current_origin.length) == current_origin) {
+								value_short = value_short.substring(current_origin.length);
+							}
+
+							policy_parsed[directive_name].push({
+									'value': value_clean,
+									'value_short': value_short,
+									'value_url': dev_headers.url_parse(value_clean),
+									'value_keyword': null,
+									'value_nonce': null,
+									'value_hash': null,
+									'value_blocked': (value_clean == ''),
+									'matches': [],
+									'notes': [],
+								});
+
+						}
+
+					}
+
+				}
 
 			//--------------------------------------------------
-			// Add missing
+			// Missing
 
-				var policy_name;
+				var pp_warning_count = 0,
+					pp_warning_overview = [],
+					policy_name;
 
 				if (current_content && current_content['permissions_policies']) {
 					for (var k = (current_content['permissions_policies'].length - 1); k >= 0; k--) {
 
 						policy_name = current_content['permissions_policies'][k];
 
-						if (!pp_parsed[policy_name]) {
+						if (!policy_parsed[policy_name]) {
 
-							pp_parsed[policy_name] = [{
+							policy_parsed[policy_name] = [{
 									'value': '',
 									'value_short': '',
 									'value_url': null,
@@ -813,7 +879,7 @@ var dev_headers = {};
 			// Return
 
 				return {
-						'parsed': pp_parsed,
+						'parsed': policy_parsed,
 						'warning_count': (pp_warning_overview.length + pp_warning_count),
 						'warning_overview': pp_warning_overview,
 					};

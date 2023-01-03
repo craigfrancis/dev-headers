@@ -246,9 +246,14 @@
 
 	#overview_table tr td[data-good],
 	#csp_table td.value_none,
+	#csp_table tr[data-name="require-trusted-types-for"] td.value_script,
 	#pp_table td.value_none {
 		color: #000CEB;
 		font-weight: bold;
+	}
+
+	#pp_table td.value_blocked {
+		color: #AAA;
 	}
 
 	#overview_table tr td[data-warning-count]:not([data-warning-count="0"]),
