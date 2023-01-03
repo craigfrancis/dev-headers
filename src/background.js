@@ -8,7 +8,7 @@ var dev_headers = {};
 
 		'use strict';
 
-		var browser = (window.chrome || window.browser),
+		var browser = (chrome || browser),
 			dev_config = {},
 			popup_tab_id = null,
 			popup_origin = null,
@@ -721,7 +721,7 @@ var dev_headers = {};
 									//
 									//   script = document.createElement('script');
 									//   script.src = '//example.com/evil.js';
-									//   window.frames[0].document.head.appendChild(script);
+									//   frames[0].document.head.appendChild(script);
 									//
 									//--------------------------------------------------
 
@@ -831,7 +831,7 @@ var dev_headers = {};
 				header_name,
 				header_value;
 
-			if (popup_tab_id && tab_responses[tab_id]) {
+			if (tab_responses[tab_id]) {
 				for (var id in tab_responses[tab_id]) {
 
 					response = tab_responses[tab_id][id];
@@ -876,7 +876,7 @@ var dev_headers = {};
 				icon_colour = (incognito ? 'F1F3F4' : '000000');
 			}
 
-			browser.browserAction.setIcon({
+			browser.action.setIcon({
 					'path': {
 							'16': 'icons/' + icon_colour + '/16.png',
 							'24': 'icons/' + icon_colour + '/24.png',
@@ -916,7 +916,7 @@ var dev_headers = {};
 
 			}
 
-			browser.browserAction.setBadgeText({
+			browser.action.setBadgeText({
 					'text': icon_text,
 					'tabId': tab_id,
 				});
@@ -929,7 +929,7 @@ var dev_headers = {};
 				clearTimeout(icon_text_timeout);
 			}
 
-			icon_text_timeout = window.setTimeout(function() {
+			icon_text_timeout = setTimeout(function() {
 					icon_text_update(tab_id);
 				}, 300);
 
@@ -986,17 +986,21 @@ var dev_headers = {};
 
 					 // browser.tabs.sendMessage only sends to content scripts.
 
-				browser.runtime.sendMessage({'target': 'popup', 'action': 'populate', 'response': {
-						'header_details': header_details,
-						'origins': origins,
-						'tab_id': popup_tab_id,
-						'origin': popup_origin,
-						'config': config,
-						'responses': responses,
-						'response_main': response_main,
-						'extra_responses': extra_responses,
-						'overview_warnings': overview_warnings,
-					}});
+				browser.runtime.sendMessage({
+						'target': 'popup',
+						'action': 'populate',
+						'response': {
+								'header_details': header_details,
+								'origins': origins,
+								'tab_id': popup_tab_id,
+								'origin': popup_origin,
+								'config': config,
+								'responses': responses,
+								'response_main': response_main,
+								'extra_responses': extra_responses,
+								'overview_warnings': overview_warnings,
+							}
+					});
 
 		}
 
@@ -1084,6 +1088,7 @@ var dev_headers = {};
 												'local': (url.origin == popup_origin),
 												'type': content_types[content_type],
 												'headers': {},
+												'responseHeadersClean': false,
 												'responseCSP': null,
 												'responsePP': null,
 											};
@@ -1126,7 +1131,10 @@ var dev_headers = {};
 				Promise.all(extra_promises).then(function() {
 
 					//--------------------------------------------------
-					// CSP and PP parsing (now we know the main response)
+					// CSP and PP parsing
+
+								// This is for the normal responses, the extra_responses (via fetch) have been done above.
+								// Done now, as we should know `response_main` (e.g. for CSP to get the Manifest URL).
 
 							var response, header_value;
 
@@ -1136,26 +1144,30 @@ var dev_headers = {};
 								responses[id]['responseCSP'] = null;
 								responses[id]['responsePP'] = null;
 
-								if (response['responseHeadersClean']['content-security-policy']) {
+								if (response['responseHeadersClean']) {
 
-									header_value = response['responseHeadersClean']['content-security-policy'];
+									if (response['responseHeadersClean']['content-security-policy']) {
 
-									if (id == response_main) {
-										responses[id]['responseCSP'] = dev_headers.csp_parse(header_value, popup_origin, current_content, responses, extra_responses);
-									} else {
-										responses[id]['responseCSP'] = dev_headers.csp_parse(header_value, popup_origin);
+										header_value = response['responseHeadersClean']['content-security-policy'];
+
+										if (id == response_main) {
+											responses[id]['responseCSP'] = dev_headers.csp_parse(header_value, popup_origin, current_content, responses, extra_responses);
+										} else {
+											responses[id]['responseCSP'] = dev_headers.csp_parse(header_value, popup_origin);
+										}
+
 									}
 
-								}
+									if (response['responseHeadersClean']['permissions-policy']) {
 
-								if (response['responseHeadersClean']['permissions-policy']) {
+										header_value = response['responseHeadersClean']['permissions-policy'];
 
-									header_value = response['responseHeadersClean']['permissions-policy'];
+										if (id == response_main) {
+											responses[id]['responsePP'] = dev_headers.pp_parse(header_value, popup_origin, current_content, responses, extra_responses);
+										} else {
+											responses[id]['responsePP'] = dev_headers.pp_parse(header_value, popup_origin);
+										}
 
-									if (id == response_main) {
-										responses[id]['responsePP'] = dev_headers.pp_parse(header_value, popup_origin, current_content, responses, extra_responses);
-									} else {
-										responses[id]['responsePP'] = dev_headers.pp_parse(header_value, popup_origin);
 									}
 
 								}
@@ -1174,26 +1186,21 @@ var dev_headers = {};
 	//--------------------------------------------------
 	// Request events
 
-		function request_event_before_send(details) {
-
-			if (details.type == 'main_frame') {
-				tab_responses[details.tabId] = {};
-				tab_enabled_new[details.tabId] = true;
-			}
-
-			var url = new URL(details.url);
-			if (url.origin && dev_config['origins'] && dev_config['origins'][url.origin] && dev_config['origins'][url.origin]['enabled'] && dev_config['origins'][url.origin]['key']) {
-				details.requestHeaders.push({
-						'name' : 'X-Dev-Key',
-						'value' : dev_config['origins'][url.origin]['key'],
-					});
-			}
-
-			return {requestHeaders: details.requestHeaders};
-
+		function request_event_log_headers(details) {
+			request_event_log(details, true);
 		}
 
-		function request_event_log(details) {
+		function request_event_log_complete(details) {
+			request_event_log(details, false);
+		}
+
+		function request_event_log(details, headers) {
+
+			var tab_id = details.tabId;
+
+			if (tab_id == -1) { // Set to -1 if the request isn't related to a tab - e.g. opening extension popup window, and the `fetch()` call re-requests the resources to get the missing headers.
+				return;
+			}
 
 				// This function is not called when files come from
 				// the "very fast in-memory cache", and it's too slow
@@ -1201,28 +1208,27 @@ var dev_headers = {};
 				// for the 'main_frame'...
 				//     browser.webRequest.handlerBehaviorChanged();
 
-			if (!tab_responses[details.tabId]) {
-				tab_responses[details.tabId] = {};
+			if (headers && details.type == 'main_frame') { // New page load - clear the list of old responses, and enable the icon.
+
+				tab_responses[tab_id] = {};
+				tab_enabled_new[tab_id] = true;
+
+			} else if (!tab_responses[tab_id]) {
+
+				tab_responses[tab_id] = {};
+
 			}
 
-			tab_responses[details.tabId][details.requestId] = details;
+			tab_responses[tab_id][details.requestId] = details;
 
-			icon_text_update_delayed(details.tabId);
+			icon_text_update_delayed(tab_id);
 
 		}
 
 	//--------------------------------------------------
 	// Config store, and apply.
 
-		function dev_config_store() {
-
-			browser.storage.local.set({'dev_config': JSON.stringify(dev_config)});
-
-			dev_config_apply();
-
-		}
-
-		function dev_config_apply() {
+		function dev_config_apply(save) {
 
 			//--------------------------------------------------
 			// Cleanup
@@ -1231,25 +1237,63 @@ var dev_headers = {};
 					dev_config['origins'] = {};
 				}
 
+				if (save) {
+					browser.storage.local.set({'dev_config': JSON.stringify(dev_config)});
+				}
+
 			//--------------------------------------------------
 			// URLs to Observe
 
-				var urls = [];
+				var listen_urls = [];
+
 				for (var origin in dev_config['origins']) {
 					if (dev_config['origins'][origin]['enabled']) {
-						urls.push(origin + '/*');
+						listen_urls.push(origin + '/*');
 					}
 				}
 
-				browser.webRequest.onBeforeSendHeaders.removeListener(request_event_before_send);
-				browser.webRequest.onHeadersReceived.removeListener(request_event_log);
-				browser.webRequest.onCompleted.removeListener(request_event_log);
+				browser.webRequest.onHeadersReceived.removeListener(request_event_log_headers);
+				browser.webRequest.onCompleted.removeListener(request_event_log_complete);
 
-				if (urls.length > 0) {
-					browser.webRequest.onBeforeSendHeaders.addListener(request_event_before_send, {'urls': urls}, ['blocking', 'requestHeaders']); // To add X-Dev-Key header
-					browser.webRequest.onHeadersReceived.addListener(request_event_log, {'urls': urls}, ['responseHeaders']); // Request starting, useful for videos that probably won't complete downloading.
-					browser.webRequest.onCompleted.addListener(request_event_log,       {'urls': urls}, ['responseHeaders']); // Request completed, to include cached responses (and note it was cached via 'fromCache').
+				if (listen_urls.length > 0) {
+					browser.webRequest.onHeadersReceived.addListener(request_event_log_headers, {'urls': listen_urls}, ['responseHeaders']); // Request starting, useful for videos that probably won't complete downloading.
+					browser.webRequest.onCompleted.addListener(request_event_log_complete,      {'urls': listen_urls}, ['responseHeaders']); // Request completed, to include cached responses (and note it was cached via 'fromCache').
 				}
+
+			//--------------------------------------------------
+			// Domains to set the X-Dev-Key header
+
+				var header_rules = [],
+					k = 1;
+
+				for (var origin in dev_config['origins']) {
+					if (dev_config['origins'][origin]['enabled'] && dev_config['origins'][origin]['key']) {
+
+						header_rules.push({
+								'id': k++,
+								'action': {
+									'type': 'modifyHeaders',
+									'requestHeaders': [
+										{
+											'header': 'X-Dev-Key',
+											'operation': 'set', // Just to note that 'append' does not work https://crbug.com/1117475
+											'value': dev_config['origins'][origin]['key']
+										}
+									]
+								},
+								'condition': {
+									'requestDomains': [ origin.replace(/^[a-z]+:\/\//, '') ], // Remove the https://
+									'resourceTypes': [ 'main_frame' ]
+								}
+							});
+
+					}
+				}
+
+				browser.declarativeNetRequest.getDynamicRules(function(old_rules) {
+						var old_rule_ids = old_rules.map(function(rule) { return rule.id });
+						browser.declarativeNetRequest.updateDynamicRules({'removeRuleIds': old_rule_ids, 'addRules': header_rules});
+					});
 
 		}
 
@@ -1262,20 +1306,21 @@ var dev_headers = {};
 					if (result['dev_config']) {
 						dev_config = JSON.parse(result['dev_config']);
 					}
-					dev_config_apply();
+					dev_config_apply(false);
 				});
 
 			browser.tabs.onUpdated.addListener(function(tab_id, change_info, tab_info) {
 
 					if (change_info.status) {
 
-						var icon_enabled = null,
+						var browser = (chrome || browser),
+							icon_enabled = null,
 							icon_colour,
 							resources_loaded = (typeof tab_enabled_new[tab_id] != 'undefined');
 
 						if (change_info.status == 'loading') { // Loading will often happen after the onBeforeSendHeaders for 'main_frame'.
 
-							browser.browserAction.setBadgeText({'text': '', 'tabId': tab_id}); // Just clear the badge text.
+							browser.action.setBadgeText({'text': '', 'tabId': tab_id}); // Just clear the badge text.
 
 							if (resources_loaded) { // Already got some resources loaded, enable now.
 
@@ -1359,8 +1404,11 @@ var dev_headers = {};
 									return;
 								}
 
-								browser.tabs.executeScript(popup_tab_id, {
-										file: 'content-script.js',
+								browser.scripting.executeScript({
+										target: {
+											'tabId': popup_tab_id
+										},
+										files: ['content-script.js']
 									}); // Cannot use callback, as this script can sometimes take too long (the message port closed).
 
 							});
@@ -1376,7 +1424,7 @@ var dev_headers = {};
 						if (!dev_config['origins'][popup_origin]) {
 
 							var key_array = new Uint32Array(3);
-							window.crypto.getRandomValues(key_array);
+							crypto.getRandomValues(key_array);
 
 							dev_config['origins'][popup_origin] = {
 									'key': key_array.join('-'),
@@ -1386,7 +1434,7 @@ var dev_headers = {};
 
 						dev_config['origins'][popup_origin]['enabled'] = true;
 
-						dev_config_store();
+						dev_config_apply(true);
 
 					} else if (data.action == 'content') {
 
@@ -1404,7 +1452,7 @@ var dev_headers = {};
 
 						dev_config['origins'][popup_origin]['key'] = data.key; // Disable by setting the key to ''
 
-						dev_config_store();
+						dev_config_apply(true);
 
 					} else if (data.action == 'disable' || data.action == 'remove') {
 
@@ -1422,7 +1470,7 @@ var dev_headers = {};
 
 						}
 
-						dev_config_store();
+						dev_config_apply(true);
 
 						icon_image_update(popup_tab_id, false);
 

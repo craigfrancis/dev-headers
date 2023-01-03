@@ -21,6 +21,10 @@
 		csp_table,
 		pp_warnings,
 		pp_table,
+		button_enable,
+		button_disable,
+		button_remove,
+		button_save,
 		key_input;
 
 	function background_send_message(action, data) {
@@ -63,14 +67,22 @@
 		browser.tabs.reload(current_tab_id, {'bypassCache': true});
 	}
 
+	function request_reload_delayed() { // Lazy away to avoid the callback/await/promise chain.
+		if (button_enable)  button_enable.setAttribute('disabled', 'disabled');
+		if (button_disable) button_disable.setAttribute('disabled', 'disabled');
+		if (button_remove)  button_remove.setAttribute('disabled', 'disabled');
+		if (button_save)    button_save.setAttribute('disabled', 'disabled');
+		window.setTimeout(request_reload, 300);
+	}
+
 	function request_enable() {
 		background_send_message('enable');
-		request_reload();
+		request_reload_delayed();
 	}
 
 	function request_save() {
 		background_send_message('key', {'key': key_input.value});
-		request_reload();
+		request_reload_delayed();
 	}
 
 	function request_disable() {
@@ -458,7 +470,11 @@
 					header_values = (response['headers'] ? response['headers'] : null) // Headers collected by doing an extra fetch()
 				}
 
-				header_names = (header_values === null ? null : Object.keys(header_values));
+				if (typeof header_values === 'undefined' || header_values === null) {
+					header_names = null;
+				} else {
+					header_names = Object.keys(header_values);
+				}
 
 				try {
 					url = new URL(response['url']);
@@ -795,19 +811,18 @@
 		//--------------------------------------------------
 		// Buttons
 
-			var enable_button  = document.getElementById('button_enable');
-			var disable_button = document.getElementById('button_disable');
-			var remove_button  = document.getElementById('button_remove');
+			button_enable  = document.getElementById('button_enable');
+			button_disable = document.getElementById('button_disable');
+			button_remove  = document.getElementById('button_remove');
 
-			if (enable_button)  enable_button.addEventListener('click',  request_enable);
-			if (disable_button) disable_button.addEventListener('click', request_disable);
-			if (remove_button)  remove_button.addEventListener('click',  request_remove);
+			if (button_enable)  button_enable.addEventListener('click',  request_enable);
+			if (button_disable) button_disable.addEventListener('click', request_disable);
+			if (button_remove)  button_remove.addEventListener('click',  request_remove);
 
 		//--------------------------------------------------
 		// Key input
 
-			var button_save = document.getElementById('button_save');
-
+			button_save = document.getElementById('button_save');
 			key_input = document.getElementById('key_value');
 
 			if (key_input) {
