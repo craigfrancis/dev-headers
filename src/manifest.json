@@ -1,7 +1,7 @@
 {
 	"name": "Dev Headers",
 	"short_name": "Dev Headers",
-	"version": "2.0.0",
+	"version": "2.0.1",
 	"manifest_version": 3,
 	"description": "Adds a header for dev websites.",
 	"icons": {

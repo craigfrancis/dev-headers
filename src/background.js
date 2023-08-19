@@ -791,7 +791,14 @@ var dev_headers = {};
 					value_hash;
 
 				if (policy_content) {
+
+					var pos = policy_content.search(';'); // Only look at the first permissions-policy header (e.g. ignore those set by other extensions)
+					if (pos > 0) {
+						policy_content = policy_content.substring(0, pos);
+					}
+
 					policy_directives = policy_content.split(',');
+
 				}
 
 				for (var k = 0, l1 = (policy_directives.length); k < l1; k++) {
@@ -908,7 +915,7 @@ var dev_headers = {};
 
 					if (!response['responseHeadersClean']) {
 						headers = {};
-						for (var k = (response['responseHeaders'].length - 1); k >= 0; k--) {
+						for (var k = 0, l = response['responseHeaders'].length; k < l; k++) {
 							header_name = response['responseHeaders'][k].name.trim().toLowerCase();
 							header_value = response['responseHeaders'][k].value.trim();
 							if (headers[header_name]) {
