@@ -1348,28 +1348,39 @@ var dev_headers = {};
 			// Domains to set the X-Dev-Key header
 
 				var header_rules = [],
-					k = 1;
+					k = 1,
+					hostname = null;
 
 				for (var origin in dev_config['origins']) {
 					if (dev_config['origins'][origin]['enabled'] && dev_config['origins'][origin]['key']) {
 
-						header_rules.push({
-								'id': k++,
-								'action': {
-									'type': 'modifyHeaders',
-									'requestHeaders': [
-										{
-											'header': 'X-Dev-Key',
-											'operation': 'set', // Just to note that 'append' does not work https://crbug.com/1117475
-											'value': dev_config['origins'][origin]['key']
-										}
-									]
-								},
-								'condition': {
-									'requestDomains': [ origin.replace(/^[a-z]+:\/\//, '') ], // Remove the https://
-									'resourceTypes': [ 'main_frame' ]
-								}
-							});
+						try {
+							hostname = new URL(origin).hostname; // Remove protocol (e.g. "https://") and and port numbers... https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/declarativeNetRequest/RuleCondition#canonical_domain
+						} catch (e) {
+							hostname = null;
+						}
+
+						if (hostname) {
+
+							header_rules.push({
+									'id': k++,
+									'action': {
+										'type': 'modifyHeaders',
+										'requestHeaders': [
+											{
+												'header': 'X-Dev-Key',
+												'operation': 'set', // Just to note that 'append' does not work https://crbug.com/1117475
+												'value': dev_config['origins'][origin]['key']
+											}
+										]
+									},
+									'condition': {
+										'requestDomains': [ hostname ],
+										'resourceTypes': [ 'main_frame' ]
+									}
+								});
+
+						}
 
 					}
 				}
