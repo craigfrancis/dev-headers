@@ -871,7 +871,7 @@
 	}
 
 	browser.tabs.onUpdated.addListener(function(tab_id, change_info) {
-			if (change_info.status == 'loading') {
+			if (change_info.status == 'loading' && tab_id === current_tab_id) {
 				window.close(); // If the user refreshes the page by keyboard shortcut, cause this window to close.
 			}
 		});

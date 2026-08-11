@@ -9,7 +9,9 @@ var dev_headers = {};
 		'use strict';
 
 		var browser = (chrome || browser),
-			dev_config = {},
+			dev_config = {'origins': {}},
+			dev_config_loaded = false,
+			dev_config_pending = [],
 			popup_tab_id = null,
 			popup_origin = null,
 			tab_responses = {},
@@ -1398,10 +1400,19 @@ var dev_headers = {};
 		if (browser) {
 
 			browser.storage.local.get(['dev_config'], function(result) {
+
 					if (result['dev_config']) {
 						dev_config = JSON.parse(result['dev_config']);
 					}
 					dev_config_apply(false);
+
+					dev_config_loaded = true;
+
+					while (dev_config_pending.length > 0) {
+						var queued = dev_config_pending.shift();
+						handle_background_message(queued.data, queued.sender);
+					}
+
 				});
 
 			browser.tabs.onUpdated.addListener(function(tab_id, change_info, tab_info) {
@@ -1467,14 +1478,7 @@ var dev_headers = {};
 
 				});
 
-			browser.runtime.onMessage.addListener(function(data, sender) {
-
-					if (sender.id !== browser.runtime.id) {
-						console.log('Invalid Sender ID');
-						return;
-					} else if (data.target !== 'background') {
-						return;
-					}
+			function handle_background_message(data, sender) {
 
 					if (data.action == 'log') {
 
@@ -1580,6 +1584,23 @@ var dev_headers = {};
 
 						console.log('Unknown');
 
+					}
+
+			}
+
+			browser.runtime.onMessage.addListener(function(data, sender) {
+
+					if (sender.id !== browser.runtime.id) {
+						console.log('Invalid Sender ID');
+						return;
+					} else if (data.target !== 'background') {
+						return;
+					}
+
+					if (!dev_config_loaded && data.action !== 'log') { // Queue if config hasn't been loaded yet (but allow 'log' to skip the queue).
+						dev_config_pending.push({'data': data, 'sender': sender});
+					} else {
+						handle_background_message(data, sender);
 					}
 
 				});
