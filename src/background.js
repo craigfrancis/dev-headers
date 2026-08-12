@@ -1324,7 +1324,7 @@ var dev_headers = {};
 				}
 
 				if (save) {
-					browser.storage.local.set({'dev_config': JSON.stringify(dev_config)});
+					browser.storage.local.set({'dev_config': dev_config}); // No longer using JSON.stringify()
 				}
 
 			//--------------------------------------------------
@@ -1402,8 +1402,21 @@ var dev_headers = {};
 			browser.storage.local.get(['dev_config'], function(result) {
 
 					if (result['dev_config']) {
-						dev_config = JSON.parse(result['dev_config']);
+						if (typeof result['dev_config'] === 'object') {
+							dev_config = result['dev_config'];
+						} else if (typeof result['dev_config'] === 'string') {
+							try {
+								dev_config = JSON.parse(result['dev_config']);
+							} catch (e) {
+								console.log('Invalid config JSON, reset to default', e);
+								dev_config = null;
+							}
+						}
+						if (typeof dev_config !== 'object' || dev_config === null || Array.isArray(dev_config) || typeof dev_config['origins'] !== 'object' || dev_config['origins'] === null || Array.isArray(dev_config['origins'])) {
+							dev_config = {'origins': {}};
+						}
 					}
+
 					dev_config_apply(false);
 
 					dev_config_loaded = true;
